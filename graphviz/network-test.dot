@@ -1,0 +1,62 @@
+digraph DF {
+    label="Data Flow Diagram"
+    labelloc="t"
+    fontname="Verdana,sans-serif"
+    node[fontname="Verdana,sans-serif"]
+    edge[fontname="Verdana,sans-serif"]
+
+    subgraph cluster_folio_aws {
+	style=dashed;
+	fontcolor="darkgreen";
+	color="blue";
+	
+	folio [label="FOLIO", shape=box, color="orange"];
+	ldp [label="LDP 1.x", shape=box];
+	metadb [label="Metadb", shape=box];
+
+	folio -> ldp;
+	folio -> metadb;
+
+	label="FOLIO AWS - Index Data";
+	labelloc="b"
+    }
+
+    subgraph cluster_it_services {
+	style=dashed;
+	tank [label="Tank", shape="cylinder"];
+	fas  [label="FAS", shape="box"];
+	vufind [label="VuFind", shape="box"];
+
+	label="IT Services";
+	labelloc="b"
+    }
+
+    ils_lib [label="ils.lib", shape="box"]
+    
+    oracle_erp [label="Oracle Cloud ERP", shape=box]
+    finance_helper [label="Finance\nHelper", shape=circle]
+    caiasoft [label="Clancy/Caiasoft", shape=box]
+    meescan [label="Meescan", shape=box]
+
+    tank -> folio [label="identity\nfeed"]
+
+    folio -> ils_lib [label="vouchers", style="dashed"]
+    ils_lib -> fas [label="vouchers", style="dashed"]
+    fas -> ils_lib [label="payments", style="dashed"]
+    ils_lib -> folio [label="payments", style="dashed"]
+    
+    folio -> vufind [label="bib\ndata"]
+    folio -> vufind [label="holdings\nand\nitem"]
+    folio -> vufind [label="patron\naccount\ninfo"]
+    vufind -> folio [label="patron\naccount\nactions"] 
+    
+    folio -> finance_helper [label="voucher"]
+    finance_helper -> oracle_erp [label="voucher"]
+    oracle_erp -> finance_helper [label="payment"]
+    finance_helper -> folio [label="payment"]
+
+    meescan -> folio [label="checkout"]
+    
+    folio -> caiasoft [label="retrieval request"]
+    caiasoft -> folio [label="item status update"]
+}

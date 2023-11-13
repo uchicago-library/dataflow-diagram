@@ -1,0 +1,48 @@
+## CSV file for draw.io
+##
+## Draw.io is UNLIKELY to be usful for significantly automating drawing this diagram. Automated layout does little to avoid confusion, has realtively few controls.
+##
+##
+## **********************************************************
+## Configuration
+## **********************************************************
+# 
+# style: whiteSpace=wrap;html=1;rounded=1;fillColor=#ffffff;strokeColor=#000000;
+# namespace: csvimport-
+#
+# connect: {"from": "Cataloging", "to": "System", "label": "Cataloging", \
+#           "style": "curved=1;fontSize=10;"}
+# connect: {"from": "Inventory", "to": "Cataloging", "style": "curved=1;fontSize=10;"}
+# connect: {"from": "Finance", "to": "System", "style": "curved=1;fontSize=10;"}
+# connect: {"from": "User", "to": "System", "style": "curved=1;fontSize=10;"}
+# connect: {"from": "Circ", "to": "System", "style": "curved=1;fontSize=10;"}
+# connect: {"from": "License", "to": "System", "style": "curved=1;fontSize=10;"}
+#
+# width: auto
+# height: auto
+# padding: 5
+# ignore: Environment,Notes
+#
+## **********************************************************
+## CSV data
+## **********************************************************
+System,Label,Environment,Descr,Sensitive,Cataloging,Inventory,Finance,User,Circ,License,Notes
+folio,FOLIO,FOLIO AWS,,x,"vufind,ldp,metadb,caiasoft,POD","vufind,ldp,metadb,caiasoft,POD","ldp,metadb,fas,oracle","ldp,metadb","ldp,metadb,meescan","ldp,metadb",
+vufind,VuFind,IT Services,,x,x,x,,,"folio",,
+ldp,LDP,folio AWS,Reporting database,x,x,x,x,x,x,x,
+metadb,Metadb,folio AWS,Reporting database,x,x,x,x,x,x,x,
+meescan,Meescan,,,x,,,,,"folio",,
+caisoft,"Clancy Caiasoft",,,,x,x,,,"folio",,
+
+daypass,Day Pass,Library,MS Access,x,,,,x,,,
+pull_list,Pull List,Library,MS Access,,x,x,,,,,pulls from multiple sources
+facstudy,Faculty Study Rental,Library,MS Access,x,,,,x,,,
+locker,Locker Rental,Library,MS Access,x,,,,x,,,
+shelving,"Shelving Database",Library,MS Access,,,x,,,,,
+,,,,,,,,,,
+fas,FAS,IT Services,,,,,"folio",,,,
+oracle,Oracle Cloud ERP,,,,,,"folio",,,,
+tank,Tank,IT Services,,,,,"folio","folio",,,"Finance data is for FAS data exchange, User data is the person feed for FOLIO"
+,,,,,,,,,,
+pod,POD,,Bib data lake,,reshare,reshare,,,,,Platform for Open Discovery
+reshare,ReShare,,Consortial ILL,,x,x,,,,,
