@@ -4,22 +4,10 @@ import csv
 import logging
 import sys
 
-"""Create visual diagram of data flow through ILS systems"""
+import netdiag
 
-system_fieldnames=["System",
-                   "Environment",
-                   "Descr",
-                   "Functional Owner",
-                   "Technical Owner",
-                   "Sensitive",
-                   "Cataloging",
-                   "Inventory",
-                   "Finance",
-                   "User",
-                   "Circ",
-                   "License",
-                   "Notes"
-                   ]
+
+"""Create visual diagram of data flow through ILS systems"""
 
 
 def read_config(filename):
@@ -64,15 +52,16 @@ def parse_args():
 
 def read_systems(filename):
     """Reads CSV file of system information, returns dictionary"""
-    global system_fieldnames
-    systems = {}
+
+    systems = []
 
     with open(filename) as csvfile:
         sys_reader = csv.DictReader(csvfile)
         for row in sys_reader:
             if row['System']:
-                systems[row['System']] = row
-            
+                code = row['System'].lower().replace(' ','_')
+                s = netdiag.System(code, row['System'], row['Environment'])
+                systems.append(s)
     return systems
 
 def parse_data(line):
@@ -84,20 +73,17 @@ def process_data(data):
     """Placeholder for processing the data"""
     return data
 
-def write_sys_dot(systems:dict, out):
-    for sys, val in systems.items():
-        # Note: before Python 3.12, f-string expression cannot contain backslash character
-        out.write(f'{sys.lower()} [label="{val["System"]}", shape=box')
-        out.write('\n')
 
 def main():
     args = parse_args()
     config = read_config(args.config_file)
     # Logic or function to override config values from the command line arguments would go here
 
-    systems = read_systems(args.systems)
-    write_sys_dot(systems, sys.stdout)
+    network = netdiag.Network('ILS')
+    for s in read_systems(args.systems):
+        network.add_sys(s)
 
+    network.write_graphviz(sys.stdout)
     return 0
 
 
