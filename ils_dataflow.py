@@ -54,6 +54,21 @@ def parse_args():
     )
     return parser.parse_args()
 
+def read_dataflows(filename):
+    """Reads CSV file of data flow information, returns list"""
+
+    dataflows = []
+
+    with open(filename) as csvfile:
+        sys_reader = csv.DictReader(csvfile)
+        for row in sys_reader:
+            if row['source'] and row['target']:
+                src = netdiag.to_code(row['source'])
+                trgt = netdiag.to_code(row['target'])
+                mode = row['mode']
+                df = netdiag.DataFlow(src, trgt, mode)
+                dataflows.append(df)
+    return dataflows
 
 def read_environments(filename):
     """Reads CSV file of environment information, returns dictionary"""
@@ -65,7 +80,8 @@ def read_environments(filename):
         for row in sys_reader:
             if row['Environment']:
                 code = netdiag.to_code(row['Environment'])
-                env = netdiag.Environment(code, row['Environment'], row['Host'], bool(row['On Campus']))
+                env = netdiag.Environment(code, row['Environment'],
+                                          row['Host'], bool(row['On Campus']))
                 environments.append(env)
     return environments
 
@@ -98,11 +114,18 @@ def main():
     config = read_config(args.config_file)
     # Logic or function to override config values from the command line arguments would go here
 
+    # Note: order of reading is significant when building up the
+    # network. must read environments, then systems, then
+    # dataflow. There are dependencies among the data and how it is
+    # interpreted.
+
     network = netdiag.Network('ILS')
     for e in read_environments(args.environments):
         network.add_environment(e)
     for s in read_systems(args.systems):
         network.add_system(s)
+    for df in read_dataflows(args.data_flow):
+        network.add_dataflow(df)
 
     network.write_graphviz(sys.stdout)
     return 0
@@ -114,4 +137,3 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Interrupted")
         sys.exit(0)
-        

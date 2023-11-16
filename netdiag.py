@@ -24,7 +24,7 @@ system_fieldnames=["System",
 def to_code(token: str):
     """Creates a lower-case 'code' from a string."""
 
-    return token.lower().replace(' ','_')
+    return token.lower().replace(' ','_').replace('.','_')
 
 class Environment:
     """Represents an environment in which software systems are hosted."""
@@ -98,22 +98,60 @@ class System:
         shape = "box"
         return f'{pad}{self.code} [label="{label}", shape={shape}];'
 
+class DataFlow:
+    """Represents the flow of data between two systems.
+
+    Attributes:
+      source: source system of the data.
+      target: target systems, where the data lands.
+      mode: read ('r') or write ('w'), i.e. does this merely read, or does it update data storage?
+    """
+
+    def __init__(self, source: str, target: str, mode: str):
+        """Initializes this DataFlow."""
+
+        self.source = source
+        self.target = target
+        self.mode = mode
+
+    def to_graphviz(self, indent=2) -> str:
+        """Returns a string that represents this DataFlow as an edge in a Graphviz diagram."""
+
+        pad = ' ' * indent
+        s = to_code(self.source)
+        t = to_code(self.target)
+        style = 'dashed' if self.mode == 'r' else 'solid'
+
+        return f'{pad}{s} -> {t} [style="{style}"]'
+
 class Network:
+    """This class represents a network and can generate a logical dataflow
+    diagram for Graphviz.
+    """
+
     def __init__(self, name:str):
         """Initializes this Environment.
 
         Attributes:
           name: Name used for this Network diagram.
-          environments: hosting environments represented in this Network.
-          systems: Systems in this network not otherwise in an Environment.
+          environments: hosting Environments represented in this Network.
+          systems: Systems in this Network not otherwise in an Environment.
+          dataflows: DataFlows in this Network.
         """
 
         self.name = name
         self.environments={}
         self.systems={}
+        self.dataflows = []
+
+    def add_dataflow(self, df) -> None:
+        """Adds a DataFlow to this Network."""
+
+        self.dataflows.append(df)
 
     def add_environment(self, environment: Environment) -> None:
         """Adds Environments to this Network."""
+
         self.environments[environment.code] = environment
 
     def add_system(self, system:System) -> None:
@@ -132,12 +170,15 @@ class Network:
           out: Writer object, like a file.
         """
 
-        out.write(f'graph {self.name} {{\n')
+        out.write(f'digraph {self.name} {{\n')
         for environment in self.environments.values():
             out.write(environment.to_graphviz())
             out.write('\n\n')
-        out.write('\n\n')
         for system in self.systems.values():
             out.write(system.to_graphviz())
+            out.write('\n')
+        out.write('\n\n')
+        for df in self.dataflows:
+            out.write(df.to_graphviz())
             out.write('\n')
         out.write('}\n')
