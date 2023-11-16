@@ -29,12 +29,13 @@ def to_code(token: str):
 class Environment:
     """Represents an environment in which software systems are hosted."""
 
-    def __init__(self, code: str, name: str, host: str):
+    def __init__(self, code: str, name: str, host: str, oncampus: bool):
         """Initializes an environment."""
 
         self.code = code
         self.name = name
         self.host = host
+        self.oncampus = oncampus
         self.systems = []
 
     def add_system(self, system: object) -> None:
@@ -50,6 +51,9 @@ class Environment:
         subgraph.append(f'{pad*2}label="{self.name}";')
         subgraph.append(f'{pad*2}labelloc="b";')
         subgraph.append(f'{pad*2}style=dashed;')
+        if self.oncampus:
+            subgraph.append(f'{pad*2}color="maroon";')
+            subgraph.append(f'{pad*2}fontcolor="maroon";')
         subgraph.append('')
         for s in self.systems:
             subgraph.append(s.to_graphviz(indent = indent+2))

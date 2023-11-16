@@ -65,7 +65,7 @@ def read_environments(filename):
         for row in sys_reader:
             if row['Environment']:
                 code = netdiag.to_code(row['Environment'])
-                env = netdiag.Environment(code, row['Environment'], row['Host'])
+                env = netdiag.Environment(code, row['Environment'], row['Host'], bool(row['On Campus']))
                 environments.append(env)
     return environments
 
