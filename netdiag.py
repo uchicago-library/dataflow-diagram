@@ -21,6 +21,42 @@ system_fieldnames=["System",
                    "Notes"
                    ]
 
+def to_code(token: str):
+    """Creates a lower-case 'code' from a string."""
+
+    return token.lower().replace(' ','_')
+
+class Environment:
+    """Represents an environment in which software systems are hosted."""
+
+    def __init__(self, code: str, name: str, host: str):
+        """Initializes an environment."""
+
+        self.code = code
+        self.name = name
+        self.host = host
+        self.systems = []
+
+    def add_system(self, system: object) -> None:
+        """Adds a System to this Environment."""
+        self.systems.append(system)
+
+    def to_graphviz(self, indent=2) -> str:
+        """Return a string that describes this Enviroment to Graphviz."""
+
+        pad = ' ' * indent
+        subgraph = []
+        subgraph.append(f'{pad}subgraph cluster_{self.code} {{')
+        subgraph.append(f'{pad*2}label="{self.name}";')
+        subgraph.append(f'{pad*2}labelloc="b";')
+        subgraph.append(f'{pad*2}style=dashed;')
+        subgraph.append('')
+        for s in self.systems:
+            subgraph.append(s.to_graphviz(indent = indent+2))
+        subgraph.append(f'{pad}}}')
+
+        return '\n'.join(subgraph)
+
 class System:
     """Represents a software system in this network.
 
@@ -50,24 +86,54 @@ class System:
 
     def to_graphviz(self, indent=2) -> str:
         """Return a string that defines a node in Graphviz."""
-        
+
         # Note: before Python 3.12, f-string expression cannot contain
         # backslash character
         pad = ' ' * indent
         label = self.name.replace(' ','\\n')
-        return '{0}{1} [label="{2}", shape={shape}];\n'.format(pad, self.code, label, shape='box')
+        shape = "box"
+        return f'{pad}{self.code} [label="{label}", shape={shape}];'
 
 class Network:
     def __init__(self, name:str):
+        """Initializes this Environment.
+
+        Attributes:
+          name: Name used for this Network diagram.
+          environments: hosting environments represented in this Network.
+          systems: Systems in this network not otherwise in an Environment.
+        """
+
         self.name = name
+        self.environments={}
         self.systems={}
 
-    def add_sys(self, system:System):
-        self.systems[system.code] = system
+    def add_environment(self, environment: Environment) -> None:
+        """Adds Environments to this Network."""
+        self.environments[environment.code] = environment
+
+    def add_system(self, system:System) -> None:
+        """Adds Systems to this Network."""
+
+        env_code=to_code(system.environment)
+        if env_code in self.environments:
+            self.environments[env_code].add_system(system)
+        else:
+            self.systems[system.code] = system
 
     def write_graphviz(self, out):
+        """Writes a Graphviz diagram of this network.
+
+        Args:
+          out: Writer object, like a file.
+        """
+
         out.write(f'graph {self.name} {{\n')
+        for environment in self.environments.values():
+            out.write(environment.to_graphviz())
+            out.write('\n\n')
+        out.write('\n\n')
         for system in self.systems.values():
-            # Note: before Python 3.12, f-string expression cannot contain backslash character
             out.write(system.to_graphviz())
+            out.write('\n')
         out.write('}\n')
