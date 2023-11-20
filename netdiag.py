@@ -1,3 +1,5 @@
+import graphviz
+
 """Model a logical data flow diagram.
 
 This module can build up an in-memory, logical representation of a
@@ -56,7 +58,7 @@ class Environment:
             subgraph.append(f'{pad*2}fontcolor="maroon";')
         subgraph.append('')
         for s in self.systems:
-            subgraph.append(s.to_graphviz(indent = indent+2))
+            subgraph.append(s.to_graphviz(indent = indent + 2))
         subgraph.append(f'{pad}}}')
 
         return '\n'.join(subgraph)
@@ -129,7 +131,7 @@ class Network:
     diagram for Graphviz.
     """
 
-    def __init__(self, name:str):
+    def __init__(self, name: str):
         """Initializes this Environment.
 
         Attributes:
@@ -154,10 +156,10 @@ class Network:
 
         self.environments[environment.code] = environment
 
-    def add_system(self, system:System) -> None:
+    def add_system(self, system: System) -> None:
         """Adds Systems to this Network."""
 
-        env_code=to_code(system.environment)
+        env_code = to_code(system.environment)
         if env_code in self.environments:
             self.environments[env_code].add_system(system)
         else:
@@ -166,8 +168,12 @@ class Network:
     def write_graphviz(self, out):
         """Writes a Graphviz diagram of this network.
 
+        This version calls to_graphviz() methods on each object which
+        return strings of Graphviz code that represent each object.
+
         Args:
           out: Writer object, like a file.
+
         """
 
         out.write(f'digraph {self.name} {{\n')
@@ -182,3 +188,11 @@ class Network:
             out.write(df.to_graphviz())
             out.write('\n')
         out.write('}\n')
+
+    def graphviz(self, out):
+        """Walk the Network and build up a graphviz object.
+        """
+
+        dot = graphviz.Digraph(self.name)
+        for environment in self.environments.values():
+            pass
