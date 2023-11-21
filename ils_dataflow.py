@@ -127,7 +127,7 @@ def main():
     for df in read_dataflows(args.data_flow):
         network.add_dataflow(df)
 
-    network.write_graphviz(sys.stdout)
+    network.write_dot(sys.stdout)
     return 0
 
 

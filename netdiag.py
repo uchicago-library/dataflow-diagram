@@ -44,8 +44,8 @@ class Environment:
         """Adds a System to this Environment."""
         self.systems.append(system)
 
-    def to_graphviz(self, indent=2) -> str:
-        """Return a string that describes this Enviroment to Graphviz."""
+    def to_dot(self, indent=2) -> str:
+        """Return a DOT string that describes this Enviroment."""
 
         pad = ' ' * indent
         subgraph = []
@@ -58,7 +58,7 @@ class Environment:
             subgraph.append(f'{pad*2}fontcolor="maroon";')
         subgraph.append('')
         for s in self.systems:
-            subgraph.append(s.to_graphviz(indent = indent + 2))
+            subgraph.append(s.to_dot(indent = indent + 2))
         subgraph.append(f'{pad}}}')
 
         return '\n'.join(subgraph)
@@ -90,8 +90,8 @@ class System:
         self.name = name
         self.environment = environment
 
-    def to_graphviz(self, indent=2) -> str:
-        """Return a string that defines a node in Graphviz."""
+    def to_dot(self, indent=2) -> str:
+        """Return a DOT string that describes this node."""
 
         # Note: before Python 3.12, f-string expression cannot contain
         # backslash character
@@ -116,8 +116,8 @@ class DataFlow:
         self.target = target
         self.mode = mode
 
-    def to_graphviz(self, indent=2) -> str:
-        """Returns a string that represents this DataFlow as an edge in a Graphviz diagram."""
+    def to_dot(self, indent=2) -> str:
+        """Returns a DOT string that creates an edgoe for this DataFlow."""
 
         pad = ' ' * indent
         s = to_code(self.source)
@@ -127,9 +127,7 @@ class DataFlow:
         return f'{pad}{s} -> {t} [style="{style}"]'
 
 class Network:
-    """This class represents a network and can generate a logical dataflow
-    diagram for Graphviz.
-    """
+    """This class represents a network with nodes, clusters, and edges."""
 
     def __init__(self, name: str):
         """Initializes this Environment.
@@ -165,10 +163,10 @@ class Network:
         else:
             self.systems[system.code] = system
 
-    def write_graphviz(self, out):
-        """Writes a Graphviz diagram of this network.
+    def write_dot(self, out):
+        """Writes a DOT-language diagram of this network.
 
-        This version calls to_graphviz() methods on each object which
+        This version calls to_dot() methods on each object which
         return strings of Graphviz code that represent each object.
 
         Args:
@@ -178,14 +176,14 @@ class Network:
 
         out.write(f'digraph {self.name} {{\n')
         for environment in self.environments.values():
-            out.write(environment.to_graphviz())
+            out.write(environment.to_dot())
             out.write('\n\n')
         for system in self.systems.values():
-            out.write(system.to_graphviz())
+            out.write(system.to_dot())
             out.write('\n')
         out.write('\n\n')
         for df in self.dataflows:
-            out.write(df.to_graphviz())
+            out.write(df.to_dot())
             out.write('\n')
         out.write('}\n')
 
