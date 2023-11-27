@@ -1,12 +1,24 @@
-import graphviz
-
 """Model a logical data flow diagram.
 
 This module can build up an in-memory, logical representation of a
 network of applications and their exchange of data. Can read in data
 from a set of CSV files and output into the DOT language used by
 Graphviz.
+
+Currently most objects provide two methods for interacting with the graphviz library:
+
+`add_to_graph()`: The object receives a Graph or Digraph object and adds itself to the graph.
+`digraph()`: the object creates a Digraph object that represents it, and the caller adds the result to the graph.
+
+These two options have a different feel.
+Returning an object that the caller will dispose of has a more composable feel, but the other method produces much tigheter DOT code.
+
+Will need to decide on one or the other.
+
+Meanwhile, either seem preferable to the original approach of formatting the DOT string directly.
 """
+
+import graphviz
 
 system_fieldnames=["System",
                    "Environment",
@@ -63,6 +75,44 @@ class Environment:
 
         return '\n'.join(subgraph)
 
+    def digraph(self) -> graphviz.Digraph:
+        """Return a Digraph that represents this Environment as a cluster."""
+
+        cluster_attr = {
+            'label': self.name,
+            'labelloc': 'b',
+            'style': 'dashed',
+        }
+        if self.oncampus:
+            cluster_attr |= {'color': 'maroon','fontcolor': 'maroon'}
+
+        c = graphviz.Digraph(name=f'cluster_{self.code}',
+                             graph_attr=cluster_attr)
+        for system in self.systems:
+            s = system.digraph()
+            c.subgraph(s)
+        return c
+
+    def add_to_graph(self, dot):
+        """Adds this Environment as a cluster to the given Dot object, a Graph or Digraph.
+
+        Arguments:
+        dot: graphviz context manager, result of Graph.subgraph()
+        """
+        cluster_attr = {
+            'label': self.name,
+            'labelloc': 'b',
+            'style': 'dashed',
+        }
+        if self.oncampus:
+            cluster_attr |= {'color': 'maroon','fontcolor': 'maroon'}
+
+        with dot.subgraph(name=f'cluster_{self.code}',
+                          graph_attr=cluster_attr) as c:
+            for s in self.systems:
+                s.add_to_graph(c)
+
+
 class System:
     """Represents a software system in this network.
 
@@ -100,6 +150,27 @@ class System:
         shape = "box"
         return f'{pad}{self.code} [label="{label}", shape={shape}];'
 
+    def digraph(self) -> graphviz.Digraph:
+        """Return a Digraph that represents this System as a cluster."""
+
+        label = self.name.replace(' ','\\n')
+        shape = "box"
+
+        sg = graphviz.Digraph(f'sg_{self.code}')
+        sg.node(self.code, label, shape=shape)
+        return sg
+
+    def add_to_graph(self, dot):
+        """Adds this System to the given Dot object, a Graph or Digraph.
+
+        Arguments:
+        dot: Dot obect, a Graph or Digraph (or a context manager from Dot.subgraph())
+        """
+
+        label = self.name.replace(' ','\\n')
+        shape = "box"
+        dot.node(self.code, label, shape=shape)
+
 class DataFlow:
     """Represents the flow of data between two systems.
 
@@ -125,6 +196,14 @@ class DataFlow:
         style = 'dashed' if self.mode == 'r' else 'solid'
 
         return f'{pad}{s} -> {t} [style="{style}"]'
+
+    def add_to_graph(self, dot):
+        """Adds this DataFlow as an edge to the Dot graph."""
+
+        s = to_code(self.source)
+        t = to_code(self.target)
+        style = 'dashed' if self.mode == 'r' else 'solid'
+        dot.edge(s, t, style=style)
 
 class Network:
     """This class represents a network with nodes, clusters, and edges."""
@@ -187,10 +266,32 @@ class Network:
             out.write('\n')
         out.write('}\n')
 
-    def graphviz(self, out):
+    def digraph(self):
         """Walk the Network and build up a graphviz object.
         """
 
         dot = graphviz.Digraph(self.name)
         for environment in self.environments.values():
-            pass
+            e = environment.digraph()
+            dot.subgraph(e)
+        for system in self.systems.values():
+            s = system.digraph()
+            dot.subgraph(s)
+
+        for df in self.dataflows:
+            df.add_to_graph(dot)
+
+        return dot
+
+    def digraph2(self) -> graphviz.graphs.BaseGraph:
+        """Walk the Network and build up a graphviz object."""
+
+        dot = graphviz.Digraph(self.name)
+        for e in self.environments.values():
+            e.add_to_graph(dot)
+        for system in self.systems.values():
+            system.add_to_graph(dot)
+        for df in self.dataflows:
+            df.add_to_graph(dot)
+
+        return dot

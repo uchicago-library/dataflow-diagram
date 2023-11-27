@@ -1,3 +1,5 @@
+"""Create visual diagram of data flow through ILS systems"""
+
 import argparse
 import configparser
 import csv
@@ -6,8 +8,6 @@ import sys
 
 import netdiag
 
-
-"""Create visual diagram of data flow through ILS systems"""
 
 
 def read_config(filename):
@@ -127,7 +127,10 @@ def main():
     for df in read_dataflows(args.data_flow):
         network.add_dataflow(df)
 
-    network.write_dot(sys.stdout)
+    #network.write_dot(sys.stdout)
+    dot = network.digraph2()
+    print(dot.render(format='png'))
+
     return 0
 
 
