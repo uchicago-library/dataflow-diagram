@@ -1,4 +1,8 @@
-"""Create visual diagram of data flow through ILS systems"""
+"""Create visual diagram of data flow through ILS systems.
+
+Reads three spreadsheets of data describing hosting environments, systems, and data flows,
+and produces a diagram.
+"""
 
 import argparse
 import configparser
@@ -9,9 +13,11 @@ import sys
 import netdiag
 
 
-
 def read_config(filename):
-    """Parse the named config file and return an config object"""
+    """Parse the named config file and return an config object.
+
+    Place holder, not yet in use.
+    """
 
     config = configparser.ConfigParser()
     config.read(filename)
@@ -21,8 +27,16 @@ def read_config(filename):
 def parse_args():
     """Parse command line arguments and return a Namespace object."""
 
+    epilog_header = "INPUT FILES\n"
+    env_help = read_environments.__doc__.partition('.')[2]
+    sys_help = read_systems.__doc__.partition('.')[2]
+    df_help = read_dataflows.__doc__.partition('.')[2]
+    epilog = epilog_header + env_help + sys_help + df_help
+
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=__doc__,
+        epilog=epilog,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "-d",
@@ -55,7 +69,16 @@ def parse_args():
     return parser.parse_args()
 
 def read_dataflows(filename):
-    """Reads CSV file of data flow information, returns list"""
+    """Reads CSV file of data flow information, returns list.
+
+    DATAFLOW file:
+    The CSV file of dataflow information must have the following columns,
+    with these headers, at a minimum:
+
+    source: Source system for data, as named in Systems.
+    target: Target system for data, as named in Systems.
+    mode:   Data transfer is read-only (`r`) or it writes to storage (`w`).
+    """
 
     dataflows = []
 
@@ -71,7 +94,20 @@ def read_dataflows(filename):
     return dataflows
 
 def read_environments(filename):
-    """Reads CSV file of environment information, returns dictionary"""
+    """
+    Reads CSV file of environment information, returns dictionary.
+
+    ENVIRONMENT file:
+    The CSV file of Environment information must have the following columns,
+    with these headers, at a minimum:
+
+    Environment: Name of the environment, will be referenced in the Systems
+                 spreadsheet.
+    Host:        The name of the hosting provider.
+    On Campus:   Indicate if this is on campus, the string will be evaluated
+                 as a boolean (e.g. 'x' evaluates as `True`, blank evaluates
+                 as False).
+    """
 
     environments = []
 
@@ -86,7 +122,19 @@ def read_environments(filename):
     return environments
 
 def read_systems(filename):
-    """Reads CSV file of system information, returns dictionary"""
+    """
+    Reads CSV file of system information, returns dictionary.
+
+    SYSTEMS file:
+    The CSV file of system information must have the following columns, with
+    these headers, at a minimum:
+
+    System:      Name of the system, will be referenced in the data flow
+                 spreadsheet.
+    Environment: The name of the environment this system is housed in, may be
+                 blank if it is not in an environment that we feel we need to
+                 make particular note of.
+    """
 
     systems = []
 
