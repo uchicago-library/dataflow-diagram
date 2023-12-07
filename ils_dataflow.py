@@ -127,7 +127,6 @@ def main():
     for df in read_dataflows(args.data_flow):
         network.add_dataflow(df)
 
-    #network.write_dot(sys.stdout)
     dot = network.digraph2()
     print(dot.render(format='png'))
 
